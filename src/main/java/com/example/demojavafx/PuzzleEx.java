@@ -1,13 +1,9 @@
 package com.example.demojavafx;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
+import javafx.scene.control.Button;
+
+import java.awt.*;
 import javax.swing.JButton;
-import java.awt.EventQueue;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
-import java.awt.Image;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -83,6 +79,7 @@ public class PuzzleEx extends JFrame {
     private List<Image> images = new ArrayList<>();
     private List<MyButton> buttons;
     private List<Point> solution;
+    private List<Integer> buttonsName = new ArrayList<>();
 
     private final int NUMBER_OF_BUTTONS = 16; // 4x4 puzzle has 16 buttons
     private final int DESIRED_WIDTH = 800;
@@ -92,7 +89,7 @@ public class PuzzleEx extends JFrame {
     }
 
     private void initUI() {
-        int k = 0;
+        int k = 1;
         solution = new ArrayList<>();
 
         solution.add(new Point(0, 0));
@@ -147,6 +144,7 @@ public class PuzzleEx extends JFrame {
                 MyButton button = new MyButton(image);
                 button.putClientProperty("position", new Point(i, j));
                 button.setName(String.valueOf(k));
+                k++;
                 if (i == 3 && j == 3) {
                     lastButton = new MyButton();
                     lastButton.setBorderPainted(false);
@@ -160,7 +158,23 @@ public class PuzzleEx extends JFrame {
         }
 
         Collections.shuffle(buttons);
+        for(MyButton button:buttons){
+            buttonsName.add(Integer.valueOf(button.getName()));
+        }
+        while (isSolvable(buttonsName) == false){
+            Collections.shuffle(buttons);
+            buttonsName.clear();
+            for(MyButton button:buttons){
+                buttonsName.add(Integer.valueOf(button.getName()));
+            }
+        }
+
         buttons.add(lastButton);
+        buttonsName.add(0);
+        lastButton.setName("0");
+
+
+
 
         for (int i = 0; i < NUMBER_OF_BUTTONS; i++) {
             MyButton btn = buttons.get(i);
@@ -175,7 +189,19 @@ public class PuzzleEx extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
-
+    //////////////////////
+    public static boolean isSolvable(List<Integer> puzzle) {
+        int inversions = 0;
+        for (int i = 0; i < puzzle.size(); i++) {
+            for (int j = i + 1; j < puzzle.size(); j++) {
+                if (puzzle.get(i) > puzzle.get(j)) {
+                    inversions++;
+                }
+            }
+        }
+        return (inversions % 2 == 0); // Если количество инверсий четное, то поле решаемо
+    }
+///////////////////////////
     private int getNewHeight(int w, int h) {
         double ratio = DESIRED_WIDTH / (double) w;
         int newHeight = (int) (h * ratio);
@@ -183,7 +209,7 @@ public class PuzzleEx extends JFrame {
     }
 
     private BufferedImage loadImage() throws IOException {
-        BufferedImage bimg = ImageIO.read(new File("D:\\myproject\\Java\\demoJavaFX — копия\\src\\main\\java\\com\\example\\demojavafx\\dolphin.png"));
+        BufferedImage bimg = ImageIO.read(new File("D:\\myproject\\Java\\java_puzzle_slider\\src\\main\\java\\com\\example\\demojavafx\\dolphin.png"));
         return bimg;
     }
 
@@ -262,11 +288,33 @@ public class PuzzleEx extends JFrame {
     }
 
     private void comparePuzzle() {
-        List<Point> current = new ArrayList<>();
-        for (JComponent btn : buttons) {
-            current.add((Point) btn.getClientProperty("position"));
+        int[][] myPuzzle = convertToListTo2DArray(buttonsName);
+
+        Program.Puzzle puzzle = new Program.Puzzle(myPuzzle);
+        puzzle.printBoard();
+
+        List<Program.Move> moves = Program.Puzzle.solvePuzzle(puzzle);
+
+        Program.Puzzle.displayMoves(moves);
+
+        for (var move : moves) {
+            puzzle.moveTile(move.tile);
         }
-        System.out.println(buttons);
+
+        puzzle.printBoard();
+
+    }
+    public static int[][] convertToListTo2DArray(List<Integer> list) {
+        int[][] array = new int[4][4];
+        int index = 0;
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                array[i][j] = list.get(index++);
+            }
+        }
+
+        return array;
     }
 }
 //https://github.com/vesran/15-puzzle-game

@@ -3,6 +3,7 @@ module com.example.demojavafx {
     requires javafx.fxml;
     requires java.desktop;
     requires java.logging;
+    requires org.jgrapht.core;
 
 
     opens com.example.demojavafx to javafx.fxml;
